@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional, List
 
-from kiutils.items.common import RenderCache, Stroke, Position, Effects
+from kiutils.items.common import RenderCache, Stroke, Position, Effects, Arc
 from kiutils.utils.strings import dequote
 
 # FIXME: Several classes have a ``stroke`` member. This feature will be introduced in KiCad 7 and
@@ -725,7 +725,10 @@ class FpPoly():
 
             if item[0] == 'pts':
                 for point in item[1:]:
-                    object.coordinates.append(Position().from_sexpr(point))
+                    if point[0] == 'arc':
+                        object.coordinates.append(Arc().from_sexpr(point))
+                    else:
+                        object.coordinates.append(Position().from_sexpr(point))
             if item[0] == 'layer': object.layer = item[1]
             if item[0] == 'tstamp': object.tstamp = item[1]
             if item[0] == 'fill': object.fill = item[1]
@@ -767,7 +770,10 @@ class FpPoly():
 
         expression = f'{indents}(fp_poly (pts\n'
         for point in self.coordinates:
-            expression += f'{indents}    (xy {point.X} {point.Y})\n'
+            if isinstance(point, Arc):
+                expression += f'{indents}    {point.to_sexpr(indent=0, newline=False)}\n'
+            else:
+                expression += f'{indents}    (xy {point.X} {point.Y})\n'
         expression += f'{indents}  ) (layer "{dequote(self.layer)}"){width}{fill}{locked}{tstamp}){endline}'
         return expression
 

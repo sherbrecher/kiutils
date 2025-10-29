@@ -81,6 +81,67 @@ class Position():
 
 
 @dataclass
+class Arc():
+    """The ``arc`` token defines an arc of an object.
+
+    Documentation:
+        https://dev-docs.kicad.org/en/file-formats/sexpr-intro/index.html#_symbol_arc
+    """
+
+    start: Position = field(default_factory=lambda: Position())
+    """The ``start`` token defines the coordinates of the start position of the arc radius"""
+
+    mid: Position = field(default_factory=lambda: Position())
+    """The ``mid`` token defines the coordinates of the midpoint along the arc"""
+
+    end: Position = field(default_factory=lambda: Position())
+    """The ``end`` token defines the coordinates of the end position of the arc radius"""
+
+    @classmethod
+    def from_sexpr(cls, exp: list) -> Arc:
+        """Convert the given S-Expresstion into a Arc object
+
+        Args:
+            - exp (list): Part of parsed S-Expression ``(arc ...)``
+
+        Raises:
+            - Exception: When given parameter's type is not a list
+            - Exception: When the first item of the list is not arc
+
+        Returns:
+            - Arc: Object of the class initialized with the given S-Expression
+        """
+        if not isinstance(exp, list):
+            raise Exception("Expression does not have the correct type")
+
+        if exp[0] != 'arc':
+            raise Exception("Expression does not have the correct type")
+
+        object = cls()
+        for item in exp:
+            if item[0] == 'start': object.start = Position.from_sexpr(item)
+            if item[0] == 'mid': object.mid = Position.from_sexpr(item)
+            if item[0] == 'end': object.end = Position.from_sexpr(item)
+
+        return object
+
+    def to_sexpr(self, indent: int = 2, newline: bool = True) -> str:
+        """Generate the S-Expression representing this object
+
+        Args:
+            - indent (int): Number of whitespaces used to indent the output. Defaults to 2.
+            - newline (bool): Adds a newline to the end of the output. Defaults to True.
+
+        Returns:
+            - str: S-Expression of this object
+        """
+        indents = ' '*indent
+        endline = '\n' if newline else ''
+
+        return f'{indents}(arc (start {self.start.X} {self.start.Y}) (mid {self.mid.X} {self.mid.Y}) (end {self.end.X} {self.end.Y})){endline}'
+
+
+@dataclass
 class Coordinate():
     """The ``coordinate`` token defines a three-dimentional position"""
 
